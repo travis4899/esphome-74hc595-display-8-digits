@@ -47,9 +47,9 @@ void HC5957Segment::update() {
 }
 
 void HC5957Segment::loop() {
-  // Scan one digit every 500 us: a complete 8-digit frame is about 250 Hz.
+  // Scan one digit every 100 us: a complete 8-digit frame is about 1.25 kHz.
   const uint32_t now = micros();
-  if (now - this->last_scan_us_ < 500)
+  if (now - this->last_scan_us_ < 100)
     return;
   this->last_scan_us_ = now;
 
@@ -125,7 +125,7 @@ uint8_t HC5957Segment::encode_char_(char c) {
 
 void HC5957Segment::dump_config() {
   ESP_LOGCONFIG(TAG, "74HC595 8-digit 7-segment display");
-  ESP_LOGCONFIG(TAG, "  Scan interval: 500 us/digit (~250 Hz full frame)");
+  ESP_LOGCONFIG(TAG, "  Scan interval: 100 us/digit (~1.25 kHz full frame)");
   LOG_PIN("  Latch/RCK: ", this->cs_);
   ESP_LOGCONFIG(TAG, "  Segment active low: %s", this->segment_active_low_ ? "YES" : "NO");
   ESP_LOGCONFIG(TAG, "  Digit active high: %s", this->digit_active_high_ ? "YES" : "NO");
