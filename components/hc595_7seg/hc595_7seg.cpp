@@ -3,12 +3,15 @@
 #include <algorithm>
 #include <cctype>
 
+#include "esp_timer.h"
+
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome::hc595_7seg {
 
 static const char *const TAG = "hc595_7seg";
+static constexpr uint64_t SCAN_INTERVAL_US = 1000;
 
 // Bit order: dp, g, f, e, d, c, b, a. A set bit means the segment is on
 // before applying the module's active-low/active-high polarity.
@@ -31,12 +34,26 @@ void HC5957Segment::setup() {
   this->spi_setup();
   this->segments_.fill(this->segment_active_low_ ? 0xFF : 0x00);
   this->digit_index_ = 0;
-  this->last_scan_us_ = micros();
+  esp_timer_create_args_t timer_args = {};
+  timer_args.callback = &HC5957Segment::timer_callback_;
+  timer_args.arg = this;
+  timer_args.dispatch_method = ESP_TIMER_TASK;
+  timer_args.name = "hc595_scan";
+  esp_err_t err = esp_timer_create(&timer_args, &this->scan_timer_);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to create scan timer: %s", esp_err_to_name(err));
+    this->mark_failed();
+    return;
+  }
+  err = esp_timer_start_periodic(this->scan_timer_, SCAN_INTERVAL_US);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to start scan timer: %s", esp_err_to_name(err));
+    this->mark_failed();
+  }
 }
 
 void HC5957Segment::update() {
-  const uint32_t scans = this->scan_count_;
-  this->scan_count_ = 0;
+  const uint32_t scans = this->scan_count_.exchange(0, std::memory_order_relaxed);
   ESP_LOGI(TAG, "Observed scan rate: %u digit writes/s (~%u full frames/s)", scans, scans / 8);
 
   if (!this->text_lambda_)
@@ -69,7 +86,7 @@ void HC5957Segment::loop() {
   this->write_byte(this->segments_[logical_digit]);
   this->write_byte(digit_mask);
   this->disable();
-  this->scan_count_++;
+  this->scan_count_.fetch_add(1, std::memory_order_relaxed);
 
   this->digit_index_ = (this->digit_index_ + 1) & 0x07;
 }
@@ -130,7 +147,7 @@ uint8_t HC5957Segment::encode_char_(char c) {
 
 void HC5957Segment::dump_config() {
   ESP_LOGCONFIG(TAG, "74HC595 8-digit 7-segment display");
-  ESP_LOGCONFIG(TAG, "  Scan interval: 100 us/digit (~1.25 kHz full frame)");
+  ESP_LOGCONFIG(TAG, "  Scan interval: 1000 us/digit (125 Hz full frame target)");\n  ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");
   LOG_PIN("  Latch/RCK: ", this->cs_);
   ESP_LOGCONFIG(TAG, "  Segment active low: %s", this->segment_active_low_ ? "YES" : "NO");
   ESP_LOGCONFIG(TAG, "  Digit active high: %s", this->digit_active_high_ ? "YES" : "NO");
