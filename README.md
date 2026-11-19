@@ -4,7 +4,7 @@ Composant externe ESPHome pour les afficheurs 7 segments de 8 chiffres pilotés 
 
 ## État
 
-Le pilote SPI gère **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI. Le balayage est exécuté par le timer haute résolution ESP-IDF en contexte tâche, indépendamment de la boucle ESPHome, avec une cible de 500 µs par chiffre (250 images/s). Le journal affiche la cadence effectivement mesurée.
+Le pilote SPI gère un afficheur ou une chaîne de **jusqu’à trois afficheurs**. Il envoie les motifs des segments et la sélection du chiffre par SPI. Le balayage est exécuté par le timer haute résolution ESP-IDF en contexte tâche, indépendamment de la boucle ESPHome, avec une cible de 500 µs par chiffre (250 images/s). Une instance peut piloter jusqu’à trois afficheurs chaînés. Le journal affiche la cadence effectivement mesurée.
 
 Le code s’inspire du fonctionnement documenté dans [AceSegment](https://github.com/bxparks/AceSegment), notamment du pilote `Hc595Module`. La carte de test identifiée par photo est un ESP-WROOM-32 classique (cible ESPHome `variant: esp32`). Le matériel d’affichage reste à valider : ordre des octets, polarités et correspondance des chiffres peuvent varier selon les fabricants.
 
@@ -32,6 +32,22 @@ text_sensor:
     update_interval: 1s
     lambda: |-
       return std::string("12345678");
+
+Pour trois afficheurs en cascade, ajoute `chain_length: 3` et retourne les textes dans l’ordre des cartes, de la première (DIO relié à l’ESP32) à la dernière, séparés par `|` :
+
+```yaml
+text_sensor:
+  - platform: hc595_7seg
+    id: afficheurs
+    name: "Afficheurs 74HC595"
+    cs_pin: GPIO19
+    chain_length: 3
+    update_interval: 1s
+    lambda: |-
+      return std::string("12|1985|2025");
+```
+
+Les connecteurs latéraux de certaines versions de ces platines répètent les signaux d’entrée et ne chaînent pas les données. Pour chaque liaison, relie la sortie série `QH'` (broche 9) du deuxième 74HC595 d’une carte au `DIO` de la suivante. Relie `SCK` et `RCK` en parallèle aux trois cartes, ainsi que l’alimentation 5 V et la masse commune. La dernière carte n’a pas besoin d’une sortie série. Vérifie la broche 9 sur la référence exacte de tes puces avant soudure.
 ```
 
 Branchement de ce test : `GPIO23 → DIO`, `GPIO18 → SCK`, `GPIO19 → RCK`, alimentation `5V` et masse commune avec l’ESP32. Les broches choisies sont dédiées à cet afficheur ; le 74HC595 des six LED reste sur son câblage actuel.
