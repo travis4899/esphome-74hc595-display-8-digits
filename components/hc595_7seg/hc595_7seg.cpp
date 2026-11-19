@@ -11,7 +11,7 @@
 namespace esphome::hc595_7seg {
 
 static const char *const TAG = "hc595_7seg";
-static constexpr uint64_t SCAN_INTERVAL_US = 1000;
+static constexpr uint64_t SCAN_INTERVAL_US = 500;
 
 // Bit order: dp, g, f, e, d, c, b, a. A set bit means the segment is on
 // before applying the module's active-low/active-high polarity.
@@ -147,7 +147,7 @@ uint8_t HC5957Segment::encode_char_(char c) {
 
 void HC5957Segment::dump_config() {
   ESP_LOGCONFIG(TAG, "74HC595 8-digit 7-segment display");
-  ESP_LOGCONFIG(TAG, "  Scan interval: 1000 us/digit (125 Hz full frame target)");
+  ESP_LOGCONFIG(TAG, "  Scan interval: 500 us/digit (250 Hz full frame target)");
   ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");
   LOG_PIN("  Latch/RCK: ", this->cs_);
   ESP_LOGCONFIG(TAG, "  Segment active low: %s", this->segment_active_low_ ? "YES" : "NO");
