@@ -4,6 +4,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "esphome/components/spi/spi.h"
 #include "esphome/components/text_sensor/text_sensor.h"
