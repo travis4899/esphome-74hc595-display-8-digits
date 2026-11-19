@@ -32,6 +32,7 @@ text_sensor:
     update_interval: 1s
     lambda: |-
       return std::string("12345678");
+```
 
 Pour trois afficheurs en cascade, ajoute `chain_length: 3` et retourne les textes dans l’ordre des cartes, de la première (DIO relié à l’ESP32) à la dernière, séparés par `|` :
 
@@ -48,7 +49,6 @@ text_sensor:
 ```
 
 Les connecteurs latéraux de certaines versions de ces platines répètent les signaux d’entrée et ne chaînent pas les données. Pour chaque liaison, relie la sortie série `QH'` (broche 9) du deuxième 74HC595 d’une carte au `DIO` de la suivante. Relie `SCK` et `RCK` en parallèle aux trois cartes, ainsi que l’alimentation 5 V et la masse commune. La dernière carte n’a pas besoin d’une sortie série. Vérifie la broche 9 sur la référence exacte de tes puces avant soudure.
-```
 
 Branchement de ce test : `GPIO23 → DIO`, `GPIO18 → SCK`, `GPIO19 → RCK`, alimentation `5V` et masse commune avec l’ESP32. Les broches choisies sont dédiées à cet afficheur ; le 74HC595 des six LED reste sur son câblage actuel.
 
