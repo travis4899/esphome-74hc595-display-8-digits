@@ -13,7 +13,8 @@ HC5957Segment = hc595_7seg_ns.class_(
     spi.SPIDevice,
 )
 CONF_SEGMENT_ACTIVE_LOW = "segment_active_low"
-CONF_DIGIT_ACTIVE_HIGH = "digit_active_high"\nCONF_CHAIN_LENGTH = "chain_length"
+CONF_DIGIT_ACTIVE_HIGH = "digit_active_high"
+CONF_CHAIN_LENGTH = "chain_length"
 
 CONFIG_SCHEMA = (
     text_sensor.text_sensor_schema()
@@ -22,7 +23,8 @@ CONFIG_SCHEMA = (
             cv.GenerateID(): cv.declare_id(HC5957Segment),
             cv.Required(CONF_LAMBDA): cv.returning_lambda,
             cv.Optional(CONF_SEGMENT_ACTIVE_LOW, default=True): cv.boolean,
-            cv.Optional(CONF_DIGIT_ACTIVE_HIGH, default=True): cv.boolean,\n            cv.Optional(CONF_CHAIN_LENGTH, default=1): cv.int_range(min=1, max=3),
+            cv.Optional(CONF_DIGIT_ACTIVE_HIGH, default=True): cv.boolean,
+            cv.Optional(CONF_CHAIN_LENGTH, default=1): cv.int_range(min=1, max=3),
         }
     )
     .extend(cv.polling_component_schema("1s"))
@@ -42,4 +44,5 @@ async def to_code(config):
     )
     cg.add(var.set_text_lambda(text_lambda))
     cg.add(var.set_segment_active_low(config[CONF_SEGMENT_ACTIVE_LOW]))
-    cg.add(var.set_digit_active_high(config[CONF_DIGIT_ACTIVE_HIGH]))\n    cg.add(var.set_chain_length(config[CONF_CHAIN_LENGTH]))
+    cg.add(var.set_digit_active_high(config[CONF_DIGIT_ACTIVE_HIGH]))
+    cg.add(var.set_chain_length(config[CONF_CHAIN_LENGTH]))
