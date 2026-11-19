@@ -54,7 +54,7 @@ void HC5957Segment::setup() {
 
 void HC5957Segment::update() {
   const uint32_t scans = this->scan_count_.exchange(0, std::memory_order_relaxed);
-  ESP_LOGI(TAG, "Observed scan rate: %u digit writes/s (~%u full frames/s)", scans, scans / 8);
+  ESP_LOGI(TAG, "Observed scan rate: %u digit writes/s (~%u full frames/s)",\n           static_cast<unsigned int>(scans), static_cast<unsigned int>(scans / 8));
 
   if (!this->text_lambda_)
     return;
