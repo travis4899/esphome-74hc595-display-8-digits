@@ -4,7 +4,7 @@ Composant externe ESPHome pour les afficheurs 7 segments de 8 chiffres pilotés 
 
 ## État
 
-Le premier pilote SPI est en place pour **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI, puis rafraîchit un chiffre par passage dans `loop()`. Le rafraîchissement est réglé à 100 µs par chiffre, soit environ 1 250 images par seconde pour les huit chiffres.
+Le pilote SPI gère **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI. Le balayage est exécuté par le timer haute résolution ESP-IDF en contexte tâche, indépendamment de la boucle ESPHome, avec une cible de 1 ms par chiffre (125 images/s). Le journal affiche la cadence effectivement mesurée.
 
 Le code s’inspire du fonctionnement documenté dans [AceSegment](https://github.com/bxparks/AceSegment), notamment du pilote `Hc595Module`. La carte de test identifiée par photo est un ESP-WROOM-32 classique (cible ESPHome `variant: esp32`). Le matériel d’affichage reste à valider : ordre des octets, polarités et correspondance des chiffres peuvent varier selon les fabricants.
 
@@ -44,9 +44,9 @@ La chaîne de texte est alignée à droite et limitée à huit caractères. Les 
 - transfert du motif segments puis du masque de chiffre ;
 - segments actifs à l’état bas et sélection du chiffre active à l’état haut par défaut ;
 - remappage physique des chiffres `4,5,6,7,0,1,2,3`, selon la disposition décrite par AceSegment pour les modules RobotDyn/diymore 8 chiffres ;
-- une lambda de texte évaluée à l’intervalle configuré ; le balayage continue indépendamment dans `loop()`.
+- une lambda de texte évaluée à l’intervalle configuré ; le balayage est cadencé séparément par le timer ESP-IDF.
 
-Les options `segment_active_low` et `digit_active_high` permettent d’inverser les polarités dans le YAML. Ce pilote n’a pas encore été vérifié sur une platine réelle. Avant d’ajouter d’autres afficheurs ou de partager un bus avec d’autres registres, valider d’abord les chiffres et la polarité sur un module.
+Les options `segment_active_low` et `digit_active_high` permettent d’inverser les polarités dans le YAML. Le timer vise 125 images/s ; vérifier la cadence mesurée sur la platine. Avant d’ajouter d’autres afficheurs ou de partager un bus avec d’autres registres, valider d’abord les chiffres et la polarité sur un module.
 
 ## Sécurité électrique
 
