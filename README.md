@@ -4,7 +4,7 @@ Composant externe ESPHome pour les afficheurs 7 segments de 8 chiffres pilotés 
 
 ## État
 
-Le pilote SPI gère **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI. Le balayage est exécuté par le timer haute résolution ESP-IDF en contexte tâche, indépendamment de la boucle ESPHome, avec une cible de 1 ms par chiffre (125 images/s). Le journal affiche la cadence effectivement mesurée.
+Le pilote SPI gère **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI. Le balayage est exécuté par le timer haute résolution ESP-IDF en contexte tâche, indépendamment de la boucle ESPHome, avec une cible de 500 µs par chiffre (250 images/s). Le journal affiche la cadence effectivement mesurée.
 
 Le code s’inspire du fonctionnement documenté dans [AceSegment](https://github.com/bxparks/AceSegment), notamment du pilote `Hc595Module`. La carte de test identifiée par photo est un ESP-WROOM-32 classique (cible ESPHome `variant: esp32`). Le matériel d’affichage reste à valider : ordre des octets, polarités et correspondance des chiffres peuvent varier selon les fabricants.
 
@@ -46,7 +46,7 @@ La chaîne de texte est alignée à droite et limitée à huit caractères. Les 
 - remappage physique des chiffres `4,5,6,7,0,1,2,3`, selon la disposition décrite par AceSegment pour les modules RobotDyn/diymore 8 chiffres ;
 - une lambda de texte évaluée à l’intervalle configuré ; le balayage est cadencé séparément par le timer ESP-IDF.
 
-Les options `segment_active_low` et `digit_active_high` permettent d’inverser les polarités dans le YAML. Le timer vise 125 images/s ; vérifier la cadence mesurée sur la platine. Avant d’ajouter d’autres afficheurs ou de partager un bus avec d’autres registres, valider d’abord les chiffres et la polarité sur un module.
+Les options `segment_active_low` et `digit_active_high` permettent d’inverser les polarités dans le YAML. Le timer vise 250 images/s ; vérifier la cadence mesurée sur la platine. Avant d’ajouter d’autres afficheurs ou de partager un bus avec d’autres registres, valider d’abord les chiffres et la polarité sur un module.
 
 ## Sécurité électrique
 
