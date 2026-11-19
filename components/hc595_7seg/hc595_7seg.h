@@ -38,6 +38,7 @@ class HC5957Segment final
   std::array<uint8_t, 8> segments_{};
   uint8_t digit_index_{0};
   uint32_t last_scan_us_{0};
+  uint32_t scan_count_{0};
   bool segment_active_low_{true};
   bool digit_active_high_{true};
 };
