@@ -1,8 +1,7 @@
 import esphome.codegen as cg
 from esphome.components import spi, text_sensor
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_LAMBDA, CONF_UPDATE_INTERVAL
-from esphome.core import CORE
+from esphome.const import CONF_ID, CONF_LAMBDA
 
 DEPENDENCIES = ["spi"]
 
