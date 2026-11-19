@@ -73,27 +73,40 @@ void HC5957Segment::prepare_frame_(const std::string &text) {
   const uint8_t blank = this->segment_active_low_ ? 0xFF : 0x00;
   this->segments_.fill(blank);
 
-  // Right-align up to eight characters. A decimal point attaches to the
-  // preceding digit, so it does not consume a digit position.
-  size_t output_pos = 8;
-  for (size_t i = text.size(); i > 0; i--) {
-    const char c = text[i - 1];
+  // Count visible characters first so shorter strings are right-aligned.
+  size_t visible = 0;
+  for (char c : text) {
+    if (c != '.' && c != ',')
+      ++visible;
+  }
+  const size_t skip = visible > 8 ? visible - 8 : 0;
+  size_t skipped = 0;
+  size_t output_pos = 8 - std::min<size_t>(visible, 8);
+  size_t previous_pos = 8;
+
+  for (char c : text) {
     if (c == '.' || c == ',') {
-      if (output_pos < 8) {
+      if (previous_pos < 8) {
         if (this->segment_active_low_)
-          this->segments_[output_pos] &= static_cast<uint8_t>(~0x80);
+          this->segments_[previous_pos] &= static_cast<uint8_t>(~0x80);
         else
-          this->segments_[output_pos] |= 0x80;
+          this->segments_[previous_pos] |= 0x80;
       }
       continue;
     }
-    if (output_pos == 0)
+    if (skipped < skip) {
+      ++skipped;
+      continue;
+    }
+    if (output_pos >= 8)
       break;
-    --output_pos;
+
     uint8_t pattern = encode_char_(c);
     if (this->segment_active_low_)
       pattern = static_cast<uint8_t>(~pattern);
     this->segments_[output_pos] = pattern;
+    previous_pos = output_pos;
+    ++output_pos;
   }
 }
 
