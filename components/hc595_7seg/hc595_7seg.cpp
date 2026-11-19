@@ -67,13 +67,11 @@ void HC5957Segment::update() {
   this->prepare_frame_(*value);
 }
 
-void HC5957Segment::loop() {
-  // Scan one digit every 100 us: a complete 8-digit frame is about 1.25 kHz.
-  const uint32_t now = micros();
-  if (now - this->last_scan_us_ < 100)
-    return;
-  this->last_scan_us_ = now;
+void HC5957Segment::timer_callback_(void *arg) {
+  static_cast<HC5957Segment *>(arg)->scan_digit_();
+}
 
+void HC5957Segment::scan_digit_() {
   const uint8_t logical_digit = this->digit_index_;
   // These boards wire their physical digits in the order 4,5,6,7,0,1,2,3.
   const uint8_t physical_digit = (logical_digit + 4) & 0x07;
@@ -87,9 +85,10 @@ void HC5957Segment::loop() {
   this->write_byte(digit_mask);
   this->disable();
   this->scan_count_.fetch_add(1, std::memory_order_relaxed);
-
   this->digit_index_ = (this->digit_index_ + 1) & 0x07;
 }
+
+void HC5957Segment::loop() {}
 
 void HC5957Segment::prepare_frame_(const std::string &text) {
   const uint8_t blank = this->segment_active_low_ ? 0xFF : 0x00;
@@ -147,7 +146,8 @@ uint8_t HC5957Segment::encode_char_(char c) {
 
 void HC5957Segment::dump_config() {
   ESP_LOGCONFIG(TAG, "74HC595 8-digit 7-segment display");
-  ESP_LOGCONFIG(TAG, "  Scan interval: 1000 us/digit (125 Hz full frame target)");\n  ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");
+  ESP_LOGCONFIG(TAG, "  Scan interval: 1000 us/digit (125 Hz full frame target)");
+  ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");
   LOG_PIN("  Latch/RCK: ", this->cs_);
   ESP_LOGCONFIG(TAG, "  Segment active low: %s", this->segment_active_low_ ? "YES" : "NO");
   ESP_LOGCONFIG(TAG, "  Digit active high: %s", this->digit_active_high_ ? "YES" : "NO");
