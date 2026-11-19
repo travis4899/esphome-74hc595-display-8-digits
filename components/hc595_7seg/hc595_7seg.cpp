@@ -47,9 +47,9 @@ void HC5957Segment::update() {
 }
 
 void HC5957Segment::loop() {
-  // Scan one digit every 2 ms: a complete 8-digit frame is about 62 Hz.
+  // Scan one digit every 500 us: a complete 8-digit frame is about 250 Hz.
   const uint32_t now = micros();
-  if (now - this->last_scan_us_ < 2000)
+  if (now - this->last_scan_us_ < 500)
     return;
   this->last_scan_us_ = now;
 
