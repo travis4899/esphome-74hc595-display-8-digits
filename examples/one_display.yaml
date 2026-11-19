@@ -1,0 +1,29 @@
+esphome:
+  name: test-74hc595-display
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/travis4899/esphome-74hc595-display-8-digits
+      ref: main
+    components: [hc595_7seg]
+
+logger:
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+
+text_sensor:
+  - platform: hc595_7seg
+    id: test_afficheur
+    name: "Test afficheur 74HC595"
+    cs_pin: GPIO19 # RCK / latch
+    update_interval: 1s
+    lambda: |-
+      return std::string("12345678");
