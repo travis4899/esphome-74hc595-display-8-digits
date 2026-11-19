@@ -35,6 +35,10 @@ void HC5957Segment::setup() {
 }
 
 void HC5957Segment::update() {
+  const uint32_t scans = this->scan_count_;
+  this->scan_count_ = 0;
+  ESP_LOGI(TAG, "Observed scan rate: %u digit writes/s (~%u full frames/s)", scans, scans / 8);
+
   if (!this->text_lambda_)
     return;
 
@@ -65,6 +69,7 @@ void HC5957Segment::loop() {
   this->write_byte(this->segments_[logical_digit]);
   this->write_byte(digit_mask);
   this->disable();
+  this->scan_count_++;
 
   this->digit_index_ = (this->digit_index_ + 1) & 0x07;
 }
