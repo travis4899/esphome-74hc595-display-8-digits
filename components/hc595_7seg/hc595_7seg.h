@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <atomic>
 #include <functional>
 #include <optional>
 #include <string>
@@ -45,7 +44,6 @@ class HC5957Segment final
   size_t chain_length_{1};
   uint8_t digit_index_{0};
   esp_timer_handle_t scan_timer_{nullptr};
-  std::atomic<uint32_t> scan_count_{0};
   bool segment_active_low_{true};
   bool digit_active_high_{true};
 };
