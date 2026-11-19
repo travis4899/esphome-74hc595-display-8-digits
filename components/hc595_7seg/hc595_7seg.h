@@ -5,7 +5,7 @@
 #include <functional>
 #include <optional>
 #include <string>
-#include <utility>
+#include <utility>\n#include <vector>
 
 #include "esp_timer.h"
 #include "esphome/components/spi/spi.h"
@@ -30,16 +30,16 @@ class HC5957Segment final
 
   void set_text_lambda(TextLambda lambda) { this->text_lambda_ = std::move(lambda); }
   void set_segment_active_low(bool value) { this->segment_active_low_ = value; }
-  void set_digit_active_high(bool value) { this->digit_active_high_ = value; }
+  void set_digit_active_high(bool value) { this->digit_active_high_ = value; }\n  void set_chain_length(size_t value) { this->chain_length_ = value; }
 
  protected:
   static void timer_callback_(void *arg);
   void scan_digit_();
   static uint8_t encode_char_(char c);
-  void prepare_frame_(const std::string &text);
+  void prepare_frame_(size_t module_index, const std::string &text);
 
   TextLambda text_lambda_;
-  std::array<uint8_t, 8> segments_{};
+  std::vector<std::array<uint8_t, 8>> segments_;\n  size_t chain_length_{1};
   uint8_t digit_index_{0};
   esp_timer_handle_t scan_timer_{nullptr};
   std::atomic<uint32_t> scan_count_{0};
