@@ -1,3 +1,4 @@
+# Target: ESP32-WROOM-32 classic (not ESP32-S3).
 esphome:
   name: test-74hc595-display
 
