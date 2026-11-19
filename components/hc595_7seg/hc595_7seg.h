@@ -1,11 +1,13 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <functional>
 #include <optional>
 #include <string>
 #include <utility>
 
+#include "esp_timer.h"
 #include "esphome/components/spi/spi.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/component.h"
@@ -31,14 +33,16 @@ class HC5957Segment final
   void set_digit_active_high(bool value) { this->digit_active_high_ = value; }
 
  protected:
+  static void timer_callback_(void *arg);
+  void scan_digit_();
   static uint8_t encode_char_(char c);
   void prepare_frame_(const std::string &text);
 
   TextLambda text_lambda_;
   std::array<uint8_t, 8> segments_{};
   uint8_t digit_index_{0};
-  uint32_t last_scan_us_{0};
-  uint32_t scan_count_{0};
+  esp_timer_handle_t scan_timer_{nullptr};
+  std::atomic<uint32_t> scan_count_{0};
   bool segment_active_low_{true};
   bool digit_active_high_{true};
 };
