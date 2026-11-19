@@ -4,7 +4,7 @@ Composant externe ESPHome pour les afficheurs 7 segments de 8 chiffres pilotés 
 
 ## État
 
-Le premier pilote SPI est en place pour **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI, puis rafraîchit un chiffre par passage dans `loop()`. Le rafraîchissement est réglé à 2 ms par chiffre, soit environ 62 images par seconde pour les huit chiffres.
+Le premier pilote SPI est en place pour **un afficheur à la fois**. Il envoie les motifs des segments et la sélection du chiffre par SPI, puis rafraîchit un chiffre par passage dans `loop()`. Le rafraîchissement est réglé à 500 µs par chiffre, soit environ 250 images par seconde pour les huit chiffres.
 
 Le code s’inspire du fonctionnement documenté dans [AceSegment](https://github.com/bxparks/AceSegment), notamment du pilote `Hc595Module`. La carte de test identifiée par photo est un ESP-WROOM-32 classique (cible ESPHome `variant: esp32`). Le matériel d’affichage reste à valider : ordre des octets, polarités et correspondance des chiffres peuvent varier selon les fabricants.
 
