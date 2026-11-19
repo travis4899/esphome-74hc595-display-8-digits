@@ -32,7 +32,7 @@ float HC5957Segment::get_setup_priority() const { return setup_priority::PROCESS
 
 void HC5957Segment::setup() {
   this->spi_setup();
-  this->segments_.fill(this->segment_active_low_ ? 0xFF : 0x00);
+  this->segments_.resize(this->chain_length_);\n  for (auto &module : this->segments_)\n    module.fill(this->segment_active_low_ ? 0xFF : 0x00);
   this->digit_index_ = 0;
   esp_timer_create_args_t timer_args = {};
   timer_args.callback = &HC5957Segment::timer_callback_;
@@ -65,7 +65,19 @@ void HC5957Segment::update() {
     return;
 
   this->publish_state(*value);
-  this->prepare_frame_(*value);
+  size_t module_index = 0;
+  size_t start = 0;
+  while (module_index < this->chain_length_) {
+    const size_t separator = value->find('|', start);
+    const size_t end = separator == std::string::npos ? value->size() : separator;
+    this->prepare_frame_(module_index, value->substr(start, end - start));
+    ++module_index;
+    if (separator == std::string::npos)
+      break;
+    start = separator + 1;
+  }
+  while (module_index < this->chain_length_)
+    this->prepare_frame_(module_index++, "");
 }
 
 void HC5957Segment::timer_callback_(void *arg) {
@@ -74,16 +86,18 @@ void HC5957Segment::timer_callback_(void *arg) {
 
 void HC5957Segment::scan_digit_() {
   const uint8_t logical_digit = this->digit_index_;
-  // These boards wire their physical digits in the order 4,5,6,7,0,1,2,3.
   const uint8_t physical_digit = (logical_digit + 4) & 0x07;
   uint8_t digit_mask = static_cast<uint8_t>(1U << physical_digit);
   if (!this->digit_active_high_)
     digit_mask = static_cast<uint8_t>(~digit_mask);
 
   this->enable();
-  // The AceSegment Hc595Module uses segment byte first, then digit-select byte.
-  this->write_byte(this->segments_[logical_digit]);
-  this->write_byte(digit_mask);
+  // Data for the farthest module must be shifted first in a serial chain.
+  for (size_t module = this->chain_length_; module > 0; --module) {
+    const size_t index = module - 1;
+    this->write_byte(this->segments_[index][logical_digit]);
+    this->write_byte(digit_mask);
+  }
   this->disable();
   this->scan_count_.fetch_add(1, std::memory_order_relaxed);
   this->digit_index_ = (this->digit_index_ + 1) & 0x07;
@@ -91,9 +105,9 @@ void HC5957Segment::scan_digit_() {
 
 void HC5957Segment::loop() {}
 
-void HC5957Segment::prepare_frame_(const std::string &text) {
+void HC5957Segment::prepare_frame_(size_t module_index, const std::string &text) {
   const uint8_t blank = this->segment_active_low_ ? 0xFF : 0x00;
-  this->segments_.fill(blank);
+  auto &module_segments = this->segments_[module_index];\n  module_segments.fill(blank);
 
   // Count visible characters first so shorter strings are right-aligned.
   size_t visible = 0;
@@ -110,7 +124,7 @@ void HC5957Segment::prepare_frame_(const std::string &text) {
     if (c == '.' || c == ',') {
       if (previous_pos < 8) {
         if (this->segment_active_low_)
-          this->segments_[previous_pos] &= static_cast<uint8_t>(~0x80);
+          module_segments[previous_pos] &= static_cast<uint8_t>(~0x80);
         else
           this->segments_[previous_pos] |= 0x80;
       }
@@ -126,7 +140,7 @@ void HC5957Segment::prepare_frame_(const std::string &text) {
     uint8_t pattern = encode_char_(c);
     if (this->segment_active_low_)
       pattern = static_cast<uint8_t>(~pattern);
-    this->segments_[output_pos] = pattern;
+    module_segments[output_pos] = pattern;
     previous_pos = output_pos;
     ++output_pos;
   }
@@ -148,7 +162,7 @@ uint8_t HC5957Segment::encode_char_(char c) {
 void HC5957Segment::dump_config() {
   ESP_LOGCONFIG(TAG, "74HC595 8-digit 7-segment display");
   ESP_LOGCONFIG(TAG, "  Scan interval: 500 us/digit (250 Hz full frame target)");
-  ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");
+  ESP_LOGCONFIG(TAG, "  Scan timer: ESP-IDF task dispatch");\n  ESP_LOGCONFIG(TAG, "  Chained display modules: %u", static_cast<unsigned int>(this->chain_length_));
   LOG_PIN("  Latch/RCK: ", this->cs_);
   ESP_LOGCONFIG(TAG, "  Segment active low: %s", this->segment_active_low_ ? "YES" : "NO");
   ESP_LOGCONFIG(TAG, "  Digit active high: %s", this->digit_active_high_ ? "YES" : "NO");
